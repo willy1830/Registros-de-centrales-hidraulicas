@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Centrales Hidráulicas - Registro Técnico</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Variables de tema */
+    :root {
+      --color-primary: #1b365d;    /* Azul oscuro Sizuca */
+      --color-secondary: #f6f6f6;  /* Gris claro de fondo */
+      --color-accent: #d4a017;     /* Dorado para acentos */
+      --font-base: 'Open Sans', sans-serif;
+    }
+
+    /* Reset mínimo */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Base */
+    body {
+      font-family: var(--font-base);
+      background: var(--color-secondary);
+      color: #333;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    a:hover {
+      opacity: 0.9;
+    }
+
+    /* Header */
+    header {
+      background: var(--color-primary);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    /* Contenedor general */
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 0 1rem;
+    }
+
+    /* Formulario responsive */
+    section {
+      padding: 1rem 0;
+    }
+    .form-container {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    label {
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: var(--font-base);
+      font-size: 1rem;
+    }
+    button {
+      grid-column: span 1;
+      padding: 0.75rem;
+      background: var(--color-accent);
+      color: var(--color-primary);
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.85;
+    }
+
+    /* Grid para pantallas grandes */
+    @media (min-width: 600px) {
+      .form-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .form-container textarea,
+      .form-container button {
+        grid-column: span 2;
+      }
+    }
+
+    /* Reporte */
+    .report {
+      background: white;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .report h3 {
+      color: var(--color-primary);
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Centrales Hidráulicas - Registro Técnico</h1>
+  </header>
+
+  <section class="container">
+    <div class="form-container">
+      <div>
+        <label for="fecha">Fecha:</label>
+        <input type="date" id="fecha">
+      </div>
+
+      <div>
+        <label for="central">Central:</label>
+        <select id="central">
+          <option value="" disabled selected>Selecciona central</option>
+          <option>CENTRAL HORNO FUSIÓN</option>
+          <option>CENTRAL HIDRÁULICA HORNO CUCHARA</option>
+          <option>CENTRAL HIDRÁULICA DE LÍNEA</option>
+          <option>CENTRAL HIDRÁULICA DE APERTURA DE CUCHARAS</option>
+          <option>CENTRAL HIDRÁULICA DE BUZAS</option>
+          <option>CENTRAL HIDRÁULICA DE DESCARGA</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="presion">Presión Operativa (bar):</label>
+        <input type="number" id="presion" placeholder="Ej. 150" step="0.1">
+      </div>
+
+      <div>
+        <label for="temperatura">Temperatura de Fluido (°C):</label>
+        <input type="number" id="temperatura" placeholder="Ej. 60" step="0.1">
+      </div>
+
+      <div style="grid-column: span 2;">
+        <label for="observaciones">Observaciones / Incidentes:</label>
+        <textarea id="observaciones" rows="4" placeholder="Detalles de cualquier anomalía"></textarea>
+      </div>
+
+      <button id="guardarBtn" type="button">Guardar Registro</button>
+    </div>
+
+    <div id="reporte" class="report"></div>
+  </section>
+
+  <script>
+    document.getElementById("guardarBtn").addEventListener("click", async () => {
+      const payload = {
+        fecha: document.getElementById("fecha").value,
+        central: document.getElementById("central").value,
+        presion: parseFloat(document.getElementById("presion").value),
+        temperatura: parseFloat(document.getElementById("temperatura").value),
+        observaciones: document.getElementById("observaciones").value
+      };
+      try {
+        const resp = await fetch('/api/registros', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw data;
+
+        document.getElementById("reporte").innerHTML = `
+          <h3>✅ Registro guardado (ID: ${data.id})</h3>
+          <p><strong>Fecha:</strong> ${payload.fecha}</p>
+          <p><strong>Central:</strong> ${payload.central}</p>
+          <p><strong>Presión:</strong> ${payload.presion} bar</p>
+          <p><strong>Temperatura:</strong> ${payload.temperatura} °C</p>
+          <p><strong>Obs.:</strong> ${payload.observaciones}</p>
+        `;
+      } catch (err) {
+        document.getElementById("reporte").innerHTML = `
+          <h3>❌ Error al guardar</h3>
+          <pre>${err.error || JSON.stringify(err)}</pre>
+        `;
+      }
+    });
+  </script>
+
+</body>
+</html>
