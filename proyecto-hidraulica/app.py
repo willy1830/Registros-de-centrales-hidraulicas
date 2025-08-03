@@ -4,16 +4,28 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
-# Importar psycopg3 para que SQLAlchemy lo utilice como driver de PostgreSQL
-import psycopg
+# Importa psycopg para que registre el dialecto “psycopg” en SQLAlchemy
+import psycopg  
 
 app = Flask(__name__)
 
+def get_database_uri():
+    url = os.getenv('DATABASE_URL')
+    if not url:
+        # Caída a SQLite para desarrollo local
+        return 'sqlite:///registros.db'
+    # Heroku style: postgres:// → postgresql+psycopg://
+    if url.startswith('postgres://'):
+        url = url.replace('postgres://',
+                          'postgresql+psycopg://', 1)
+    # postgresQL standard: postgresql:// → postgresql+psycopg://
+    elif url.startswith('postgresql://'):
+        url = url.replace('postgresql://',
+                          'postgresql+psycopg://', 1)
+    return url
+
 # Configuración de la base de datos
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    'sqlite:///registros.db'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -28,7 +40,7 @@ class Registro(db.Model):
     temperatura = db.Column(db.Float, nullable=False)
     observaciones = db.Column(db.Text)
 
-# Inicialización de la BD antes de la primera petición
+# Crear las tablas antes de la primera petición
 @app.before_first_request
 def init_db():
     db.create_all()
@@ -61,7 +73,6 @@ def guardar_registro():
     return jsonify({'status': 'ok', 'id': registro.id}), 201
 
 if __name__ == '__main__':
-    # Sólo en local, habilita debug
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(
         host='0.0.0.0',
