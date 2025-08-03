@@ -1,17 +1,10 @@
-.hidden {
-  display: none;
+/* Formulario invisible al cargar */
+section {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
 }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-#intro-logo {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: fadeInOut 3s ease-in-out forwards;
+/* Clase para mostrarlo suavemente */
+section.visible {
+  opacity: 1;
 }
