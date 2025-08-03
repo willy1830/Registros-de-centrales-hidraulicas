@@ -1,7 +1,11 @@
 import os
 from datetime import datetime
+
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+
+# Importar psycopg3 para que SQLAlchemy lo utilice como driver de PostgreSQL
+import psycopg
 
 app = Flask(__name__)
 
@@ -59,4 +63,8 @@ def guardar_registro():
 if __name__ == '__main__':
     # Sólo en local, habilita debug
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
+    app.run(
+        host='0.0.0.0',
+        port=int(os.getenv('PORT', 5000)),
+        debug=debug
+    )
